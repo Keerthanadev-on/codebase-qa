@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <title>Codebase QA &#10047;</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fdf0f3;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: #fdf0f3;
+      border-right: 1.5px solid #f7c5d0;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #c46e85;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: #d4a0b0;
+      margin-bottom: 20px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #d4a0b0;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin: 14px 0 8px;
+    }
+
+    .repo-input {
+      background: #fff;
+      border: 1.5px solid #f7c5d0;
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #c46e85;
+      width: 100%;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    .repo-input::placeholder {
+      color: #e0b0bc;
+    }
+
+    .load-btn {
+      background: #f7c5d0;
+      border: none;
+      border-radius: 20px;
+      padding: 9px 0;
+      color: #7a3045;
+      font-size: 12px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .load-btn:hover {
+      background: #f0a8be;
+    }
+
+    .stats-box {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #f7c5d0;
+      padding: 12px 14px;
+      margin-top: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #d4a0b0;
+    }
+
+    .stat-val {
+      font-size: 11px;
+      font-weight: 600;
+      color: #c46e85;
+    }
+
+    .lang-bar {
+      height: 6px;
+      border-radius: 10px;
+      background: #f7c5d0;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .lang-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: #7aab50;
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    .history-item {
+      font-size: 11px;
+      color: #c46e85;
+      background: #fff;
+      border-radius: 12px;
+      padding: 7px 10px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      border: 1px solid #f7c5d0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item:hover {
+      background: #fdf0f3;
+    }
+
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1.5px solid #f7c5d0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #c46e85;
+    }
+
+    .chat-header-sub {
+      font-size: 11px;
+      color: #d4a0b0;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab {
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #f7c5d0;
+      color: #c46e85;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #f7c5d0;
+      color: #7a3045;
+      border-color: #f7c5d0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #fffafc;
+    }
+
+    .bubble-user {
+      align-self: flex-end;
+      background: #f7c5d0;
+      border-radius: 20px 20px 4px 20px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #7a3045;
+      max-width: 65%;
+    }
+
+    .bubble-ai {
+      align-self: flex-start;
+      background: #fff;
+      border: 1.5px solid #f7c5d0;
+      border-radius: 20px 20px 20px 4px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #4a5e38;
+      max-width: 70%;
+      line-height: 1.6;
+    }
+
+    .code-block {
+      font-family: monospace;
+      font-size: 11px;
+      background: #eaf4de;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-top: 8px;
+      color: #4a5e38;
+      white-space: pre-wrap;
+    }
+
+    .citation-chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-size: 10px;
+      background: #eaf4de;
+      border-radius: 20px;
+      padding: 3px 10px;
+      color: #7aab50;
+      border: 1px solid #d4e8c2;
+    }
+
+    .chat-input-area {
+      padding: 14px 20px;
+      border-top: 1.5px solid #f7c5d0;
+      background: #fff;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: #fdf0f3;
+      border: 1.5px solid #f7c5d0;
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 13px;
+      color: #c46e85;
+      outline: none;
+    }
+
+    .chat-input::placeholder {
+      color: #e0b0bc;
+    }
+
+    .send-btn {
+      background: #c46e85;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 22px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .send-btn:hover {
+      background: #b05570;
+    }
+
+    .right-panel {
+      width: 210px;
+      background: #fafffe;
+      border-left: 1.5px solid #d4e8c2;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #7aab50;
+      margin-bottom: 10px;
+    }
+
+    .citation-file {
+      background: #eaf4de;
+      border-radius: 12px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .citation-file-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: #4a5e38;
+    }
+
+    .citation-file-line {
+      font-size: 10px;
+      color: #7aab50;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      font-size: 11px;
+      color: #d4e8c2;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="logo">Codebase QA &#10047;</div>
+      <div class="logo-sub">ask anything about any repo</div>
+
+      <div class="section-label">Repository</div>
+      <input class="repo-input" id="repoInput" placeholder="github.com/user/repo" />
+      <button class="load-btn" onclick="loadRepo()">Load repo &#10024;</button>
+
+      <div class="stats-box">
+        <div class="stat-row">
+          <span class="stat-label">Files indexed</span>
+          <span class="stat-val" id="fileCount">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val" id="repoStatus">Not loaded</span>
+        </div>
+        <div class="lang-bar">
+          <div class="lang-fill" id="langFill"></div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top: auto;">Chat history</div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-area">
+      <div class="chat-header">
+        <div>
+          <div class="chat-header-title" id="repoTitle">No repo loaded</div>
+          <div class="chat-header-sub" id="repoSubtitle">Load a repo to get started</div>
+        </div>
+        <div class="tab-row">
+          <div class="tab active" onclick="switchTab('chat', this)">Chat</div>
+          <div class="tab" onclick="switchTab('architecture', this)">Architecture</div>
+          <div class="tab" onclick="switchTab('interview', this)">Interview</div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="bubble-ai">
+          Hey! &#127800; Paste a GitHub repo URL on the left and hit <strong>Load repo</strong> to get started. Then ask
+          me anything about the code!
+        </div>
+      </div>
+
+      <div id="architectureView" style="display:none; flex:1; overflow-y:auto; background:#fffafc;">
+        <div id="archContent" style="padding:20px;">
+          <div style="font-size:13px; color:#d4a0b0; text-align:center; margin-top:40px;">Load a repo and click
+            Architecture to see the diagram &#127807;</div>
+        </div>
+      </div>
+
+      <div id="interviewView" style="display:none; flex:1; overflow-y:auto; background:#fffafc;">
+        <div style="font-size:13px; color:#d4a0b0; text-align:center; margin-top:40px;">Load a repo and click Interview
+          to generate questions &#127800;</div>
+      </div>
+
+      <div class="chat-input-area" id="chat-input-area">
+        <input class="chat-input" id="questionInput" placeholder="Ask anything about this codebase..."
+          onkeydown="if(event.key==='Enter') askQuestion()" />
+        <button class="send-btn" onclick="askQuestion()">Send</button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="panel-title">&#128196; Citations</div>
+      <div id="citationsList">
+        <div class="empty-state">Citations will appear here after you ask a question &#127807;</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const API = "http://127.0.0.1:8000";
+    let history = [];
+
+    async function loadRepo() {
+      const url = document.getElementById("repoInput").value.trim();
+      if (!url) return;
+
+      document.getElementById("repoStatus").textContent = "Loading...";
+      document.getElementById("repoTitle").textContent = "Loading repo...";
+      addBubble("ai", "Loading your repo... this might take a minute!");
+
+      try {
+        const res = await fetch(`${API}/load-repo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repo_url: "https://" + url.replace("https://", "") })
+        });
+        const data = await res.json();
+
+        const repoName = url.split("/").slice(-2).join("/");
+        document.getElementById("repoTitle").textContent = repoName;
+        document.getElementById("repoSubtitle").textContent = "Repo loaded successfully!";
+        document.getElementById("repoStatus").textContent = "Ready ✅";
+        document.getElementById("fileCount").textContent = "83";
+        document.getElementById("langFill").style.width = "80%";
+        addBubble("ai", "Repo loaded! Ask me anything about the code!");
+      } catch (e) {
+        addBubble("ai", "Oops! Something went wrong. Is your backend running?");
+        document.getElementById("repoStatus").textContent = "Error";
+      }
+    }
+
+    async function askQuestion() {
+      const q = document.getElementById("questionInput").value.trim();
+      if (!q) return;
+
+      document.getElementById("questionInput").value = "";
+      addBubble("user", q);
+      history.push(q);
+      updateHistory();
+
+      const typing = addBubble("ai", "Thinking...");
+
+      try {
+        const response = await fetch(`${API}/ask`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: q })
+        });
+
+        typing.remove();
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble-ai";
+        document.getElementById("chatMessages").appendChild(bubble);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          fullText += chunk;
+
+          if (fullText.includes("||SOURCES||")) {
+            const parts = fullText.split("||SOURCES||");
+            bubble.innerHTML = parts[0].replace(/```[\w]*\n?([\s\S]*?)```/g, '<div class="code-block">$1</div>');
+            const sources = JSON.parse(parts[1]);
+            updateCitations(sources);
+            bubble.innerHTML += `<div class="citation-chips">${sources.map(s => `<span class="chip">&#128196; ${s}</span>`).join("")}</div>`;
+          } else {
+            bubble.textContent = fullText;
+          }
+          scrollChat();
+        }
+
+      } catch (e) {
+        typing.remove();
+        addBubble("ai", "Oops! Something went wrong. Is your backend running?");
+      }
+    }
+
+    async function switchTab(tab, el) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+
+      document.getElementById("chatMessages").style.display = tab === "chat" ? "flex" : "none";
+      document.getElementById("architectureView").style.display = tab === "architecture" ? "flex" : "none";
+      document.getElementById("interviewView").style.display = tab === "interview" ? "flex" : "none";
+      document.getElementById("chat-input-area").style.display = tab === "chat" ? "flex" : "none";
+
+      if (tab === "architecture") await loadArchitecture();
+      if (tab === "interview") await loadInterview();
+    }
+
+    async function loadArchitecture() {
+      const content = document.getElementById("archContent");
+      content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center; padding:40px;">Analyzing repo structure...</div>`;
+
+      try {
+        const res = await fetch(`${API}/architecture`);
+        const data = await res.json();
+
+        if (data.error) {
+          content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center;">${data.error}</div>`;
+          return;
+        }
+
+        const connections = {};
+        data.nodes.forEach(n => connections[n.id] = []);
+        data.links.forEach(l => {
+          if (connections[l.source]) {
+            connections[l.source].push(l.target.split("/").pop());
+          }
+        });
+
+        content.innerHTML = data.nodes.map(node => {
+          const deps = connections[node.id] || [];
+          return `
+          <div style="background:#fff; border:1.5px solid #f7c5d0; border-radius:16px; padding:14px 16px; margin-bottom:12px;">
+            <div style="font-size:13px; font-weight:600; color:#c46e85; margin-bottom:6px;">&#128196; ${node.name}</div>
+            <div style="font-size:10px; color:#aaa; margin-bottom:8px;">${node.id}</div>
+            ${deps.length > 0 ? `
+              <div style="font-size:11px; color:#7aab50; margin-bottom:6px;">connects to:</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${deps.slice(0, 6).map(d => `<span style="background:#eaf4de; border-radius:20px; padding:3px 10px; font-size:10px; color:#4a5e38;">&#8594; ${d}</span>`).join("")}
+                ${deps.length > 6 ? `<span style="font-size:10px; color:#d4a0b0;">+${deps.length - 6} more</span>` : ""}
+              </div>
+            ` : `<div style="font-size:11px; color:#d4a0b0;">No connections found</div>`}
+          </div>
+        `;
+        }).join("");
+
+      } catch (e) {
+        content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center;">Error: ${e.message}</div>`;
+      }
+    }
+
+    async function loadInterview() {
+      const content = document.getElementById("interviewView");
+      content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center; padding:40px;">Generating interview questions...</div>`;
+
+      try {
+        const res = await fetch(`${API}/interview`);
+        const data = await res.json();
+
+        if (data.error) {
+          content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center;">${data.error}</div>`;
+          return;
+        }
+
+        const colors = { "Easy": "#7aab50", "Medium": "#f0a030", "Hard": "#c46e85" };
+        const bg = { "Easy": "#eaf4de", "Medium": "#fef3e2", "Hard": "#fdf0f3" };
+
+        content.innerHTML = `
+        <div style="padding:20px;">
+          <div style="font-size:16px; font-weight:600; color:#c46e85; margin-bottom:4px;">Interview Mode &#127800;</div>
+          <div style="font-size:12px; color:#d4a0b0; margin-bottom:20px;">Questions based on the actual codebase</div>
+          ${data.questions.map((q, i) => `
+            <div style="background:#fff; border:1.5px solid #f7c5d0; border-radius:16px; padding:16px; margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:600; color:#c46e85;">Q${i + 1}</div>
+                <span style="background:${bg[q.difficulty]}; color:${colors[q.difficulty]}; font-size:10px; padding:3px 10px; border-radius:20px; font-weight:500;">${q.difficulty}</span>
+              </div>
+              <div style="font-size:13px; color:#7a3045; margin-bottom:12px; line-height:1.5;">${q.question}</div>
+              <div style="background:#fdf0f3; border-radius:10px; padding:10px 12px;">
+                <div style="font-size:10px; font-weight:600; color:#d4a0b0; margin-bottom:4px;">ANSWER</div>
+                <div style="font-size:12px; color:#4a5e38; line-height:1.6;">${q.answer}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      } catch (e) {
+        content.innerHTML = `<div style="font-size:13px; color:#d4a0b0; text-align:center;">Error: ${e.message}</div>`;
+      }
+    }
+
+    function addBubble(type, text) {
+      const div = document.createElement("div");
+      div.className = type === "user" ? "bubble-user" : "bubble-ai";
+      div.textContent = text;
+      document.getElementById("chatMessages").appendChild(div);
+      scrollChat();
+      return div;
+    }
+
+    function scrollChat() {
+      const c = document.getElementById("chatMessages");
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function updateHistory() {
+      const list = document.getElementById("historyList");
+      list.innerHTML = history.slice(-5).reverse().map(q =>
+        `<div class="history-item">${q}</div>`
+      ).join("");
+    }
+
+    function updateCitations(sources) {
+      document.getElementById("citationsList").innerHTML = sources.map(s => `
+      <div class="citation-file">
+        <div class="citation-file-name">${s.split("/").pop()}</div>
+        <div class="citation-file-line">${s}</div>
+      </div>
+    `).join("");
+    }
+  </script>
+</body>
+
+</html>
