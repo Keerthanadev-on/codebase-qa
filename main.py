@@ -17,11 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "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")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
-PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "pcsk_6cMTJd_LsS7y1tjUmKhudxrPGnfcQSFPVozHnm4W7K5uq41XnFe7Gbkyt3x5gdyQiiZjzT")
-
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "")
 model = SentenceTransformer('all-MiniLM-L6-v2')
 index = None
 
@@ -72,9 +70,7 @@ Code context:
 Question: {req.question}
 """
 
-    client = Groq(api_key=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
-)
-
+    client = Groq(api_key=GROQ_API_KEY)
     def stream():
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -162,9 +158,7 @@ Code:
 {context}
 """
 
-    client = Groq(api_key=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
-)
-    response = client.chat.completions.create(
+    client = Groq(api_key=GROQ_API_KEY)    response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}]
     )
