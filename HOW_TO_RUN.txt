@@ -1,0 +1,36 @@
+CODEBASE QA - HOW TO RUN
+=========================
+
+STEP 1 - Open Terminal 1 (Backend)
+------------------------------------
+cd D:\codebase-qa
+venv\Scripts\activate
+uvicorn main:app --reload
+
+Wait for: "Application startup complete"
+
+STEP 2 - Open Terminal 2 (Frontend)
+------------------------------------
+cd D:\codebase-qa
+python -m http.server 5500
+
+STEP 3 - Open Browser
+------------------------------------
+Go to: http://localhost:5500
+
+STEP 4 - Use the app
+------------------------------------
+- Paste: github.com/pallets/flask
+- Click: Load repo
+- Ask any question!
+
+NOTES
+------------------------------------
+- Keep BOTH terminals running while using the app
+- Flask repo is cached so it loads instantly
+- To stop: Press Ctrl+C in both terminals
+- API Keys are in main.py
+
+LIVE FRONTEND (no backend needed)
+------------------------------------
+https://codebase-qa-app.netlify.app
