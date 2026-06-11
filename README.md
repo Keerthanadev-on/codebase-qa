@@ -8,7 +8,7 @@ Ask anything about any GitHub codebase in plain English.
 
 ## What it does
 
-Paste a GitHub repo → ask questions → get answers based on the actual source code with file citations.
+Paste a GitHub repo URL → ask questions → get answers based on the actual source code with file citations. No setup needed — just open the link and use it!
 
 ---
 
@@ -24,26 +24,16 @@ Paste a GitHub repo → ask questions → get answers based on the actual source
 
 ## Tech Stack
 
-Python · FastAPI · Groq (LLaMA 3.3) · Pinecone · Sentence Transformers · GitHub API
+Python · FastAPI · Groq (LLaMA 3.3 70B) · Pinecone · Sentence Transformers · GitHub API · Netlify · Hugging Face Spaces
 
 ---
 
-## Run locally
+## How to use
 
-```bash
-git clone https://github.com/Keerthanadev-on/codebase-qa.git
-cd codebase-qa
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-python -m http.server 5500
-```
-
-Add your API keys in `main.py`:
-- `GITHUB_TOKEN`
-- `GROQ_API_KEY`
-- `PINECONE_API_KEY`
+1. Go to [codebase-qa-app.netlify.app](https://codebase-qa-app.netlify.app)
+2. Paste any public GitHub repo URL
+3. Click **Load repo**
+4. Ask anything about the code!
 
 ---
 
